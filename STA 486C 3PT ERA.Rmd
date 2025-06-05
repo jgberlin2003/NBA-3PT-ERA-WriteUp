@@ -1,0 +1,158 @@
+---
+title: "STA 486C NOT Project 1"
+author: "Jacob Berlin"
+date: "2025-02-07"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Introduction
+
+I chose a data set including every NBA team's basic box score stats from each season. The seasons ranged from 1947-2025. I chose this data set simply because I am a big fan of basketball and was curious to see how the statistics of the NBA has changed since the 3-point line was introduced. I was also hoping to learn if the introduction of the 3-point line directly affected other stats tracked like personal fouls, points scored, or free throws attempted. In regards to the accuracy and legitimacy of the data, I am very confident that it is correct and real. Although the data was downloaded directly from kaggle.com, the data was said to be taken directly from basketball-reference.com which is arguably the most accurate data site for basketball statistics (besides the official NBA website). I made sure to double check and compare the data downloaded from Kaggle to the basketball reference data and they matched up, so I can confidently say that this data is accurate.
+
+
+# Data Cleaning
+
+
+The primary cleaning that was necessary for the data was trimming down the amount of seasons and variables I would need for the analysis. The original data ranged from 1947 to 2025, but I cut down the range to 1980 to 2024. I did this because as of writing this the 2025 NBA season is still going on and I wanted to use data from complete seasons. I cut off everything before 1980 because 1980 was the year the 3-point line was introduced. The original data set also had 28 variables and I only kept the 6 that suited my needs. Because the NBA is so good at recording data there weren't any NA's or major problems I had to deal with, so cleaning (or more accurately wrangling in this case) just included me taking out anything I found unnecessary as well as adding in one column. The one column I added in assigns a five-year span classification for each season (this column isn't initially important but it was necessary fo the development of a boxplot). The key variables in the data set include season, x3pa_per_game, fta_per_game, pf_per_game, and pts_per_game. The season column just indicates what year that specific season and stats took place in while the other variables are as follows: x3pa_per_game is 3-pointers attempted per game, fta_per_game is free throws attempted per game, pf_per_game is personal fouls committed per game, and pts_per_game is points scored per game. Below is a look at the first row of the data set for the purpose of understanding the data's format.
+
+```{r, include=FALSE}
+library(dplyr)
+library(ggplot2)
+library(gridExtra)
+library(grid)
+library(knitr)
+```
+
+```{r, echo=FALSE}
+Teams.dirty <- read.csv("Team Stats Per Game.csv")
+
+Teams.clean <- subset(Teams.dirty, lg == 'NBA' & season > 1973)
+Teams.clean <- Teams.clean %>% select(-c(lg, abbreviation))
+
+
+Teams.3ptEra <- subset(Teams.clean,season > 1979 & season < 2025)
+
+Teams.3ptEra.2 <- Teams.3ptEra %>% select(c(season, team, 
+                                            x3p_per_game, x3pa_per_game, x3p_percent,
+                                            fg_percent, pts_per_game))
+
+League.3ptEra <- subset(Teams.3ptEra, team == 'League Average')
+
+League.3ptEra <- League.3ptEra %>% select(c(season, team, 
+                                            x3pa_per_game, fta_per_game,
+                                            pf_per_game, pts_per_game))
+
+League.3ptEra <- League.3ptEra %>%
+  mutate(FiveSpan = case_when(
+    season >= 1980 & season <= 1984 ~ "1980-84",
+    season >= 1985 & season <= 1989 ~ "1985-89",
+    season >= 1990 & season <= 1994 ~ "1990-94",
+    season >= 1995 & season <= 1999 ~ "1995-99",
+    season >= 2000 & season <= 2004 ~ "2000-04",
+    season >= 2005 & season <= 2009 ~ "2005-09",
+    season >= 2010 & season <= 2014 ~ "2010-14",
+    season >= 2015 & season <= 2019 ~ "2015-19",
+    season >= 2020 & season <= 2024 ~ "2020-24"
+  ))
+
+kable(head(League.3ptEra, 1))
+
+```
+
+\pagebreak
+
+
+# Data Visualizations
+
+
+```{r, echo=FALSE}
+League.3ptEra %>%
+  ggplot(aes(x = FiveSpan, y = pts_per_game, fill = FiveSpan))+
+  geom_boxplot(staplewidth = 0.5, coef = Inf)+
+  stat_summary(fun = mean, geom = "point", color = "black")+
+  labs(title = "NBA Points Distribution by Five-Year Span",
+       y = "Points per Game",
+       x = "Seasons")+
+  theme_minimal()+
+  theme(
+    axis.text.y = element_text(size = 10),
+    axis.title.y = element_text(size = 13),
+    axis.title.x = element_text(size = 13),
+    axis.text.x = element_text(size = 11),
+    legend.position = "none"
+  )
+```
+
+
+(Fig. 1) A box plot showing the league average for points scored per game in five-year spans. Black dot represents the mean while black line represents median. Whisker caps represents maximum/minimum points scored for each time span.
+
+
+\pagebreak
+
+
+```{r, echo=FALSE}
+p1 <- League.3ptEra %>%
+  ggplot(aes(x = season, y = x3pa_per_game))+
+  geom_col(fill = "salmon", color = "white")+
+  labs(title = "3-Pointers Attempted per game in NBA",
+       y = "3-Pointers",
+       x = "Season")
+
+p2 <- League.3ptEra %>%
+  ggplot(aes(x = season, y = fta_per_game))+
+  geom_col(fill = "steelblue", color = "white")+
+  labs(title = "Free Throws Attempted per game in NBA",
+       y = "Free Throws",
+       x = "Season")+
+  coord_cartesian(ylim = c(18, 33))
+
+
+p3 <- League.3ptEra %>%
+  ggplot(aes(x = season, y = pts_per_game))+
+  geom_col(fill = "seagreen", color = "white")+
+  labs(title = "Points Scored per game in NBA",
+       y = "Points",
+       x = "Season")+
+  coord_cartesian(ylim = c(80, 120))
+
+p4 <- League.3ptEra %>%
+  ggplot(aes(x = season, y = pf_per_game))+
+  geom_col(fill = "plum", color = "white")+
+  labs(title = "Personal Fouls per game in NBA",
+       y = "Personal Fouls",
+       x = "Season")+
+  coord_cartesian(ylim = c(15, 30))
+
+
+main_title <- textGrob("NBA Game Trends Over the 3-Point Era", 
+                       gp = gpar(fontsize = 16, fontface = "bold"))
+
+
+grid.arrange(p1, p2, p4, p3, ncol = 2, nrow = 2,
+                                  top = main_title) 
+```
+
+
+(Fig. 2) A figure containing four different graphs. Each graph demonstrates how different statistics recorded in the NBA have changed since 1980.
+
+\pagebreak
+
+Figure 1 is a box plot that displays the average amount of points scored per game in five-year segments from 1980 to 2024. We can see a parabola-esque shape formed by the trend of the plots, with the average amount of points scored being around 110 in the 1980's and gradually declining when entering the the 1990's and early 2000's. A gradual increase begins during the 2005-2009 span and shoots up significantly with some variance in between 2015 and 2019. The plot ends with the 2020-2024 time span where scoring is consistently the highest. It is interesting to see how consistent the scoring averages were in the 1980's compared to how inconsistent they are in the 1990's and 2010's. Also, considering how the skill level among players and teams are constantly increasing, I find it interesting that the points scored took a massive dip in the early 200's. I was curious to see why this may have been the case so I looked at how other stats including points scored per game developed through time in Figure 2.
+
+Figure 2 shows how different parts of basketball have changed throughout time, not just points scored. The top left graph shows on average how many 3-pointers have been taken since 1980. For the most part, the amount of threes being shot has increased each season with a few spikes. The graphs following the rate of free throws attempted and personal fouls committed are very similar looking as they are highly correlated. Interestingly enough they have both consistently decreased through time which is both surprising and not surprising. It is somewhat surprising because a popular narrative in today's era of basketball is that more "light" fouls are being called meaning that referees are calling fouls on only somewhat physical plays that don't meet the criteria of being a foul. A reason it isn't surprising though is that due to the higher rate of threes being shot, players are pushing their way to the hoop and drawing contact from their opponents. Naturally, more outside shots are going to lead to less free throws and personal fouls committed. The bottom right graph is similar to Figure 1 in regards to it tracking points scored per game but in this format it is easier to see how the other stats affect its own progression. Considering that more threes were being taken during the 2000's as well as still a fair amount of free throws being attempted it is interesting to see that the 2000's suffers from such a decline in points.
+
+
+# Conclusions
+
+
+If I had more time with this data, I would like to take a deeper dive into why there is such a significant dip in scoring in the late 90's and early 2000's. Maybe overall field goal percentage took a dive due to the increase in threes or maybe there were more turnovers being forced with more intense defense. A challenge I could see in further analysis would be the inclusion of the early years of the NBA. Some statistics weren't actively tracked like blocks, steals, and turnovers so it would be hard to see how those progressed throughout all of NBA history instead of just from 1980 to present day. 
+
+
+## GitHub Repo
+
+https://github.com/jgberlin2003/NBAStatistics
