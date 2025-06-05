@@ -15,9 +15,9 @@ The goal was to visualize how the game has evolved over time, and whether there 
 
 ## 🗂️ Files Included
 
-- `NBA_3PT_ERA_Analysis.Rmd`: The R Markdown source file with all code and commentary.
-- `NBA_3PT_ERA_Analysis.pdf`: A rendered PDF version of the final report.
-- `data/nba_team_stats.csv`: The dataset used in this analysis (source: Kaggle / Basketball-Reference).
+- `NBA_3PT_ERA_.Rmd`: The R Markdown source file with all code and commentary.
+- `NBA_3PT_ERA_Report.pdf`: A rendered PDF version of the final report.
+- `Team Stats Per Game.csv`: The dataset used in this analysis (source: Kaggle / Basketball-Reference).
 - `README.md`: This file.
 
 ## 📌 Key Findings
