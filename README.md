@@ -35,7 +35,7 @@ The data was downloaded from [Kaggle](https://www.kaggle.com/) but originally so
 To reproduce the analysis:
 
 1. Open the `.Rmd` file in RStudio.
-2. Make sure the `nba_team_stats.csv` file is placed in a `data/` subfolder.
+2. Make sure the `Team Stats Per Game.csv` file is placed in a `data/` subfolder.
 3. Install the required packages (see below).
 4. Knit the file to PDF or HTML.
 
